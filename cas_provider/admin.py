@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from models import ServiceTicket, LoginTicket
+from cas_provider.models import ServiceTicket, LoginTicket
 
 class ServiceTicketAdmin(admin.ModelAdmin):
     pass

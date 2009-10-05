@@ -5,9 +5,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login, logout as auth_logout
 
-from forms import LoginForm
-from models import ServiceTicket, LoginTicket
-from utils import create_service_ticket
+from cas_provider.forms import LoginForm
+from cas_provider.models import ServiceTicket, LoginTicket
+from cas_provider.utils import create_service_ticket
 
 __all__ = ['login', 'validate', 'service_validate', 'logout']
 

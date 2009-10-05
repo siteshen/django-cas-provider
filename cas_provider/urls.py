@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 
-from views import *
+from cas_provider.views import *
 
 urlpatterns = patterns('',
     url(r'^login/$', login),

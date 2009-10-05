@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate
 
-from utils import create_login_ticket
+from cas_provider.utils import create_login_ticket
 
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=30)
