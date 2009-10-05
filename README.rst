@@ -9,23 +9,17 @@ Chris Williams <chris@nitron.org>
 OVERVIEW
 =========
 
-django-cas-provider is a provider for the `Central Authentication 
-Service <http://jasig.org/cas>`_. It supports CAS version 1.0. It allows 
-remote services to authenticate users for the purposes of 
-Single Sign-On (SSO). For example, a user logs into a CAS server 
-(provided by django-cas-provider) and can then access other services 
-(such as email, calendar, etc) without re-entering her password for
-each service. For more details, see the `CAS wiki <http://www.ja-sig.org/wiki/display/CAS/Home>`_
-and `Single Sign-On on Wikipedia <http://en.wikipedia.org/wiki/Single_Sign_On>`_.
+django-cas-provider is a provider for the `Central Authentication Service <http://jasig.org/cas>`_. It supports CAS version 1.0 and parts of CAS version 2.0 protocol. It allows remote services to authenticate users for the purposes of Single Sign-On (SSO). For example, a user logs into a CAS server 
+(provided by django-cas-provider) and can then access other services (such as email, calendar, etc) without re-entering her password for each service. For more details, see the `CAS wiki <http://www.ja-sig.org/wiki/display/CAS/Home>`_ and `Single Sign-On on Wikipedia <http://en.wikipedia.org/wiki/Single_Sign_On>`_.
 
 INSTALLATION
 =============
 
-To install, run the following command from this directory:
+To install, run the following command from this directory::
 
-    	``python setup.py install``
+	python setup.py install
 
-Or, put cas_provider somewhere on your Python path.
+Or, put `cas_provider` somewhere on your Python path.
 	
 USAGE
 ======
