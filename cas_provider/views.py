@@ -9,7 +9,7 @@ from forms import LoginForm
 from models import ServiceTicket, LoginTicket
 from utils import create_service_ticket
 
-__all__ = ['login', 'validate', 'logout']
+__all__ = ['login', 'validate', 'service_validate', 'logout']
 
 def login(request, template_name='cas/login.html', success_redirect='/accounts/'):
     service = request.GET.get('service', None)
@@ -63,7 +63,33 @@ def validate(request):
         except:
             pass
     return HttpResponse("no\n\r\n\r")
+
+def service_validate(request):
+    service = request.GET.get('service', None)
+    ticket_string = request.GET.get('ticket', None)
+    if service is None or ticket_string is None:
+        return HttpResponse('''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+            <cas:authenticationFailure code="INVALID_REQUEST">
+                Not all required parameters were sent.
+            </cas:authenticationFailure>
+        </cas:serviceResponse>''', mimetype='text/xml')
     
+    try:
+        ticket = ServiceTicket.objects.get(ticket=ticket_string)
+        username = ticket.user.username
+        ticket.delete()
+        return HttpResponse('''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+            <cas:authenticationSuccess>
+                <cas:user>%(username)s</cas:user>
+            </cas:authenticationSuccess>
+        </cas:serviceResponse>''' % {'username': username}, mimetype='text/xml')
+    except ServiceTicket.DoesNotExist:
+        return HttpResponse(''''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+            <cas:authenticationFailure code="INVALID_TICKET">
+                The provided ticket is invalid.
+            </cas:authenticationFailure>
+        </cas:serviceResponse>''', mimetype='text/xml')
+
 def logout(request, template_name='cas/logout.html'):
     url = request.GET.get('url', None)
     auth_logout(request)
