@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login, logout as auth_logout
 
 from cas_provider.forms import LoginForm
-from cas_provider.models import ServiceTicket, LoginTicket
+from cas_provider.models import ServiceTicket, LoginTicket, auth_success_response
 from cas_provider.utils import create_service_ticket
 
 __all__ = ['login', 'validate', 'service_validate', 'logout']
@@ -76,15 +76,10 @@ def service_validate(request):
     
     try:
         ticket = ServiceTicket.objects.get(ticket=ticket_string)
-        username = ticket.user.username
-        ticket.delete()
-        return HttpResponse('''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
-            <cas:authenticationSuccess>
-                <cas:user>%(username)s</cas:user>
-            </cas:authenticationSuccess>
-        </cas:serviceResponse>''' % {'username': username}, mimetype='text/xml')
+        # ticket.delete()
+        return HttpResponse(auth_success_response(ticket.user), mimetype='text/xml')
     except ServiceTicket.DoesNotExist:
-        return HttpResponse(''''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+        return HttpResponse('''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
             <cas:authenticationFailure code="INVALID_TICKET">
                 The provided ticket is invalid.
             </cas:authenticationFailure>
