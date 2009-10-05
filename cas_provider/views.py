@@ -76,7 +76,7 @@ def service_validate(request):
     
     try:
         ticket = ServiceTicket.objects.get(ticket=ticket_string)
-        # ticket.delete()
+        ticket.delete()
         return HttpResponse(auth_success_response(ticket.user), mimetype='text/xml')
     except ServiceTicket.DoesNotExist:
         return HttpResponse('''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
