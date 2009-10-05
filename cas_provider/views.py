@@ -59,10 +59,10 @@ def validate(request):
             ticket = ServiceTicket.objects.get(ticket=ticket_string)
             username = ticket.user.username
             ticket.delete()
-            return HttpResponse("yes\n\r%s\n\r" % username)
+            return HttpResponse("yes\n%s\n" % username)
         except:
             pass
-    return HttpResponse("no\n\r\n\r")
+    return HttpResponse("no\n\n")
 
 def service_validate(request):
     service = request.GET.get('service', None)
