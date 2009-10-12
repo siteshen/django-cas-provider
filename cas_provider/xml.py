@@ -9,7 +9,8 @@ try:
         NSMAP[prefix] = uri
     
     def ElementRoot(*args, **kwargs):
-        return etree.Element(*args, nsmap=NSMAP, **kwargs)
+        kwargs['nsmap'] = NSMAP
+        return etree.Element(*args, **kwargs)
 
 except ImportError:
     try:
