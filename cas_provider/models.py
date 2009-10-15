@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.urlresolvers import get_callable
 
-from cas_provider.xml import etree, register_namespace, ElementRoot
+from cas_provider.etree import etree, register_namespace, ElementRoot
 
 class ServiceTicket(models.Model):
     user = models.ForeignKey(User)
