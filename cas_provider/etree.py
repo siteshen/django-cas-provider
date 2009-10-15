@@ -21,10 +21,10 @@ except ImportError:
         import elementtree.ElementTree as etree
 
     try:
-        register_namespace = ET.register_namespace
+        register_namespace = etree.register_namespace
     except AttributeError:
         def register_namespace(prefix, uri):
-            ET._namespace_map[uri] = prefix
+            etree._namespace_map[uri] = prefix
 
     def ElementRoot(*args, **kwargs):
         return etree.Element(*args, **kwargs)
