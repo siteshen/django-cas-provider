@@ -4,6 +4,7 @@ from django.template import RequestContext
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.utils.translation import ugettext_lazy as _
 
 from forms import LoginForm
 from models import ServiceTicket, LoginTicket
@@ -32,7 +33,7 @@ def login(request, template_name='cas/login.html', success_redirect='/accounts/'
         try:
             login_ticket = LoginTicket.objects.get(ticket=lt)
         except:
-            errors.append('Login ticket expired. Please try again.')
+            errors.append(_('Login ticket expired. Please try again.'))
         else:
             login_ticket.delete()
             user = authenticate(username=username, password=password)
@@ -45,9 +46,9 @@ def login(request, template_name='cas/login.html', success_redirect='/accounts/'
                     else:
                         return HttpResponseRedirect(success_redirect)
                 else:
-                    errors.append('This account is disabled.')
+                    errors.append(_('This account is disabled.'))
             else:
-                    errors.append('Incorrect username and/or password.')
+                    errors.append(_('Incorrect username and/or password.'))
     form = LoginForm(service)
     return render_to_response(template_name, {'form': form, 'errors': errors}, context_instance=RequestContext(request))
     
