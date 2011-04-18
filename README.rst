@@ -34,3 +34,10 @@ USAGE
 #. In *settings.py*, set ``LOGIN_URL`` to ``'/cas/login/'`` and ``LOGOUT_URL`` to ``'/cas/logout/'``
 #. In *urls.py*, put the following line: ``(r'^cas/', include('cas_provider.urls')),``
 #. Create login/logout templates (or modify the samples)
+#. Use 'cleanuptickets' management command to clean up expired tickets
+
+SETTINGS
+=========
+
+CAS_TICKET_EXPIRATION - minutes to tickets expiration (default is 5 minutes)
+
