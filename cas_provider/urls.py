@@ -1,9 +1,8 @@
 from django.conf.urls.defaults import *
 
-from views import *
 
-urlpatterns = patterns('',
-    url(r'^login/', login),
-    url(r'^validate/', validate),
-    url(r'^logout/', logout),
+urlpatterns = patterns('cas_provider.views',
+    url(r'^login/?$', 'login', name='cas_login'),
+    url(r'^validate/?$', 'validate', name='cas_validate'),
+    url(r'^logout/?$', 'logout', name='cas_logout'),
 )
