@@ -1,4 +1,6 @@
 from cas_provider.models import ServiceTicket
+from cas_provider.views import _cas2_sucess_response, _cas2_error_response, \
+    INVALID_TICKET
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -50,6 +52,15 @@ class ViewsTest(TestCase):
     def test_nonactive_user_login(self):
         self._fail_login('nonactive', '123')
 
+    def test_cas2_success_validate(self):
+        response = self._login_user('root', '123')
+        self._validate_cas2(response, True)
+
+    def test_cas2_fail_validate(self):
+        for user, pwd in (('root', '321'), ('notroot', '123'), ('nonactive', '123')):
+            response = self._login_user(user, pwd)
+            self._validate_cas2(response, False)
+
 
     def _fail_login(self, username, password):
         response = self._login_user(username, password)
@@ -95,10 +106,29 @@ class ViewsTest(TestCase):
             self.assertEqual(response.content, u'no\r\n\r\n')
 
 
+    def _validate_cas2(self, response, is_correct=True):
+        if is_correct:
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(response.has_header('location'))
+            location = urlparse(response['location'])
+            ticket = location.query.split('=')[1]
+
+            response = self.client.get(reverse('cas_service_validate'), {'ticket': ticket, 'service': self.service}, follow=False)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, _cas2_sucess_response(self.username).content)
+        else:
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.context['form'].errors), 1)
+
+            response = self.client.get(reverse('cas_service_validate'), {'ticket': 'ST-12312312312312312312312', 'service': self.service}, follow=False)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, _cas2_error_response(INVALID_TICKET).content)
+
+
 class ModelsTestCase(TestCase):
 
     fixtures = ['cas_users.json', ]
-    
+
     def setUp(self):
         self.user = User.objects.get(username='root')
 

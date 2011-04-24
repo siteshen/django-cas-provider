@@ -11,6 +11,17 @@ from models import ServiceTicket, LoginTicket
 __all__ = ['login', 'validate', 'logout', 'service_validate']
 
 
+INVALID_TICKET = 1
+INVALID_SERVICE = 2
+INVALID_REQUEST = 3
+
+ERROR_MESSAGES = (
+    (INVALID_TICKET, u'The provided ticket is invalid.'),
+    (INVALID_SERVICE, u'Service is invalid'),
+    (INVALID_REQUEST, u'Not all required parameters were sent.'),
+)
+
+
 def login(request, template_name='cas/login.html', \
                 success_redirect=settings.LOGIN_REDIRECT_URL):
     service = request.GET.get('service', None)
@@ -59,7 +70,8 @@ def validate(request):
 def logout(request, template_name='cas/logout.html'):
     url = request.GET.get('url', None)
     auth_logout(request)
-    return render_to_response(template_name, {'url': url}, context_instance=RequestContext(request))
+    return render_to_response(template_name, {'url': url}, \
+                              context_instance=RequestContext(request))
 
 
 def service_validate(request):
@@ -67,29 +79,36 @@ def service_validate(request):
     service = request.GET.get('service', None)
     ticket_string = request.GET.get('ticket', None)
     if service is None or ticket_string is None:
-        return _cas2_error_response(u'INVALID_REQUEST', u'Not all required parameters were sent.')
+        return _cas2_error_response(INVALID_REQUEST)
 
     try:
         ticket = ServiceTicket.objects.get(ticket=ticket_string)
     except ServiceTicket.DoesNotExist:
-        return _cas2_error_response(u'INVALID_TICKET', u'The provided ticket is invalid.')
+        return _cas2_error_response(INVALID_TICKET)
 
     if settings.CAS_CHECK_SERVICE and ticket.service != service:
         ticket.delete()
-        return _cas2_error_response('INVALID_SERVICE', u'Service is invalid')
+        return _cas2_error_response(INVALID_SERVICE)
 
     username = ticket.user.username
     ticket.delete()
+    return _cas2_sucess_response(username)
+
+
+def _cas2_error_response(code):
+    return HttpResponse(u''''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+            <cas:authenticationFailure code="%(code)s">
+                %(message)s
+            </cas:authenticationFailure>
+        </cas:serviceResponse>''' % {
+            'code': code,
+            'message': dict(ERROR_MESSAGES).get(code)
+    }, mimetype='text/xml')
+
+
+def _cas2_sucess_response(username):
     return HttpResponse(u'''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
         <cas:authenticationSuccess>
             <cas:user>%(username)s</cas:user>
         </cas:authenticationSuccess>
     </cas:serviceResponse>''' % {'username': username}, mimetype='text/xml')
-
-
-def _cas2_error_response(code, message):
-    return HttpResponse(u''''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
-            <cas:authenticationFailure code="%s">
-                %s
-            </cas:authenticationFailure>
-        </cas:serviceResponse>''', mimetype='text/xml')
