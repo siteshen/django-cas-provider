@@ -40,4 +40,64 @@ SETTINGS
 =========
 
 CAS_TICKET_EXPIRATION - minutes to tickets expiration (default is 5 minutes)
+CAS_CHECK_SERVICE - check if ticket service is equal with service GET argument
+
+PROTOCOL DOCUMENTATION
+=====================
+
+* `CAS Protocol <http://www.jasig.org/cas/protocol>`
+* `CAS 1 Architecture <http://www.jasig.org/cas/cas1-architecture>`
+* `CAS 2 Architecture <http://www.jasig.org/cas/cas2-architecture>`
+* `Proxy Authentication <http://www.jasig.org/cas/proxy-authentication>`
+* `CAS – Central Authentication Service <http://www.jusfortechies.com/cas/overview.html>`
+* `Proxy CAS Walkthrough <https://wiki.jasig.org/display/CAS/Proxy+CAS+Walkthrough>`
+
+PROVIDED VIEWS
+=============
+
+login
+---------
+
+It has not required arguments.
+
+Optional arguments:
+
+* template_name - login form template name (default is 'cas/login.html')
+* success_redirect - redirect after successful login if service GET argument is not provided 
+   (default is settings.LOGIN_REDIRECT_URL)
+* warn_template_name - warning page template name to allow login user to service if he
+  already authenticated in SSO (default is 'cas/warn.html')
+
+If request.GET has 'warn' argument - it shows warning message if user has already
+authenticated in SSO instead of generate Service Ticket and redirect.
+
+logout
+-----------
+
+This destroys a client's single sign-on CAS session. The ticket-granting cookie is destroyed, 
+and subsequent requests to login view will not obtain service tickets until the user again
+presents primary credentials (and thereby establishes a new single sign-on session).
+
+It has not required arguments.
+
+Optional arguments:
+
+* template_name - template name for page with successful logout message (default is 'cas/logout.html')
+
+validate
+-------------
+
+It checks the validity of a service ticket. It is part of the CAS 1.0 protocol and thus does
+not handle proxy authentication.
+
+It has not arguments. 
+
+service_validate
+-------------------------
+
+It checks the validity of a service ticket and returns an XML-fragment response via CAS 2.0 protocol.
+Work with proxy is not supported yet.
+
+It has not arguments.
+
 

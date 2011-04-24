@@ -1,29 +1,60 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from random import Random
+import string
+import urllib
+import urlparse
+
 
 __all__ = ['ServiceTicket', 'LoginTicket']
 
-class ServiceTicket(models.Model):
+
+class BaseTicket(models.Model):
+    ticket = models.CharField(_('ticket'), max_length=32)
+    created = models.DateTimeField(_('created'), auto_now=True)
+
+    class Meta:
+        abstract = True
+
+    def __init__(self, *args, **kwargs):
+        if 'ticket' not in kwargs:
+            kwargs['ticket'] = self._generate_ticket()
+        super(BaseTicket, self).__init__(*args, **kwargs)
+
+    def __unicode__(self):
+        return self.ticket
+
+    def _generate_ticket(self, length=29, chars=string.ascii_letters + string.digits):
+        """ Generates a random string of the requested length. Used for creation of tickets. """
+        return u"%s-%s" % (self.prefix, ''.join(Random().sample(chars, length)))
+
+
+class ServiceTicket(BaseTicket):
     user = models.ForeignKey(User, verbose_name=_('user'))
     service = models.URLField(_('service'), verify_exists=False)
-    ticket = models.CharField(_('ticket'), max_length=256)
-    created = models.DateTimeField(_('created'), auto_now=True)
+
+    prefix = 'ST'
 
     class Meta:
         verbose_name = _('Service Ticket')
         verbose_name_plural = _('Service Tickets')
 
-    def __unicode__(self):
-        return "%s (%s) - %s" % (self.user.username, self.service, self.created)
+    def get_redirect_url(self):
+        parsed = urlparse.urlparse(self.service)
+        query = urlparse.parse_qs(parsed.query)
+        query['ticket'] = [self.ticket]
+        query = [ ((k, v) if len(v) > 1 else (k, v[0])) for k, v in query.iteritems()]
+        parsed = urlparse.ParseResult(parsed.scheme, parsed.netloc,
+                                  parsed.path, parsed.params,
+                                  urllib.urlencode(query), parsed.fragment)
+        return parsed.geturl()
 
-class LoginTicket(models.Model):
-    ticket = models.CharField(_('ticket'), max_length=32)
-    created = models.DateTimeField(_('created'), auto_now=True)
+
+class LoginTicket(BaseTicket):
+
+    prefix = 'LT'
 
     class Meta:
         verbose_name = _('Login Ticket')
         verbose_name_plural = _('Login Tickets')
-
-    def __unicode__(self):
-        return "%s - %s" % (self.ticket, self.created)
