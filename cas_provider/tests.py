@@ -96,14 +96,14 @@ class ViewsTest(TestCase):
 
             response = self.client.get(reverse('cas_validate'), {'ticket': ticket, 'service': self.service}, follow=False)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(unicode(response.content), u'yes\r\n%s\r\n' % self.username)
+            self.assertEqual(unicode(response.content), u'yes\n%s\n' % self.username)
         else:
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.context['form'].errors), 1)
 
             response = self.client.get(reverse('cas_validate'), {'ticket': 'ST-12312312312312312312312', 'service': self.service}, follow=False)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, u'no\r\n\r\n')
+            self.assertEqual(response.content, u'no\n\n')
 
 
     def _validate_cas2(self, response, is_correct=True):
