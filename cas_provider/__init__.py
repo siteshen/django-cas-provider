@@ -4,7 +4,6 @@ __all__ = []
 
 _DEFAULTS = {
     'CAS_TICKET_EXPIRATION': 5, # In minutes
-    'CAS_CHECK_SERVICE': False,
 }
 
 for key, value in _DEFAULTS.iteritems():

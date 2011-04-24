@@ -40,7 +40,6 @@ SETTINGS
 =========
 
 CAS_TICKET_EXPIRATION - minutes to tickets expiration (default is 5 minutes)
-CAS_CHECK_SERVICE - check if ticket service is equal with service GET argument
 
 PROTOCOL DOCUMENTATION
 =====================

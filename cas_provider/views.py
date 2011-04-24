@@ -70,6 +70,7 @@ def validate(request):
         # TODO: check user SSO session
         try:
             ticket = ServiceTicket.objects.get(ticket=ticket_string)
+            assert ticket.service == service
             username = ticket.user.username
             ticket.delete()
             return HttpResponse("yes\n%s\n" % username)
@@ -97,7 +98,7 @@ def service_validate(request):
     except ServiceTicket.DoesNotExist:
         return _cas2_error_response(INVALID_TICKET)
 
-    if settings.CAS_CHECK_SERVICE and ticket.service != service:
+    if ticket.service != service:
         ticket.delete()
         return _cas2_error_response(INVALID_SERVICE)
 
