@@ -1,7 +1,7 @@
+from models import ServiceTicket, LoginTicket
 from random import Random
 import string
 
-from models import ServiceTicket, LoginTicket
 
 def _generate_string(length=8, chars=string.ascii_letters + string.digits):
     """ Generates a random string of the requested length. Used for creation of tickets. """

@@ -13,7 +13,7 @@ from utils import create_service_ticket
 __all__ = ['login', 'validate', 'logout', 'service_validate']
 
 
-def login(request, template_name='cas/login.html', success_redirect='/accounts/'):
+def login(request, template_name='cas/login.html', success_redirect=getattr(settings, 'LOGIN_REDIRECT_URL', '/accounts/')):
     service = request.GET.get('service', None)
     if request.user.is_authenticated():
         if service is not None:
