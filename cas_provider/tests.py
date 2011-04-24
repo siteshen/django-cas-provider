@@ -1,9 +1,11 @@
+from cas_provider.models import ServiceTicket
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from urlparse import urlparse
 
 
-class UserTest(TestCase):
+class ViewsTest(TestCase):
 
     fixtures = ['cas_users.json', ]
 
@@ -30,7 +32,7 @@ class UserTest(TestCase):
     def test_logout(self):
         response = self._login_user('root', '123')
         self._validate_cas1(response, True)
-        
+
         response = self.client.get(reverse('cas_logout'), follow=False)
         self.assertEqual(response.status_code, 200)
 
@@ -57,7 +59,7 @@ class UserTest(TestCase):
         self.assertEqual(response.status_code, 200)
         response = self.client.get(reverse('cas_login'), follow=False)
         self.assertEqual(response.status_code, 200)
-    
+
 
 
     def _login_user(self, username, password):
@@ -83,9 +85,24 @@ class UserTest(TestCase):
 
             response = self.client.get(reverse('cas_validate'), {'ticket': ticket, 'service': self.service}, follow=False)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(unicode(response.content), u'yes\r\n%s\r\n' % self.username if is_correct else u'no\r\n')
+            self.assertEqual(unicode(response.content), u'yes\r\n%s\r\n' % self.username)
         else:
             self.assertEqual(response.status_code, 200)
-            self.assertGreater(len(response.context['errors']), 0)
-            self.assertEqual(len(response.context['form'].errors), 0)
+            self.assertEqual(len(response.context['form'].errors), 1)
+
+            response = self.client.get(reverse('cas_validate'), {'ticket': 'ST-12312312312312312312312', 'service': self.service}, follow=False)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, u'no\r\n\r\n')
+
+
+class ModelsTestCase(TestCase):
+
+    fixtures = ['cas_users.json', ]
+    
+    def setUp(self):
+        self.user = User.objects.get(username='root')
+
+    def test_redirects(self):
+        ticket = ServiceTicket.objects.create(service='http://example.com', user=self.user)
+        self.assertEqual(ticket.get_redirect_url(), '%(service)s?ticket=%(ticket)s' % ticket.__dict__)
 

@@ -1,57 +1,44 @@
 from django.conf import settings
-from django.contrib.auth import authenticate, login as auth_login, \
+from django.contrib.auth import login as auth_login, \
     logout as auth_logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.utils.translation import ugettext_lazy as _
 from forms import LoginForm
 from models import ServiceTicket, LoginTicket
-from utils import create_service_ticket
 
 
 __all__ = ['login', 'validate', 'logout', 'service_validate']
 
 
-def login(request, template_name='cas/login.html', success_redirect=getattr(settings, 'LOGIN_REDIRECT_URL', '/accounts/')):
+def login(request, template_name='cas/login.html', \
+                success_redirect=getattr(settings, 'LOGIN_REDIRECT_URL', '/accounts/')):
     service = request.GET.get('service', None)
     if request.user.is_authenticated():
         if service is not None:
-            ticket = create_service_ticket(request.user, service)
-            if service.find('?') == -1:
-                return HttpResponseRedirect(service + '?ticket=' + ticket.ticket)
-            else:
-                return HttpResponseRedirect(service + '&ticket=' + ticket.ticket)
+            ticket = ServiceTicket.objects.create(service=service, user=request.user)
+            return HttpResponseRedirect(ticket.get_redirect_url())
         else:
             return HttpResponseRedirect(success_redirect)
-    errors = []
     if request.method == 'POST':
-        username = request.POST.get('username', None)
-        password = request.POST.get('password', None)
-        service = request.POST.get('service', None)
-        lt = request.POST.get('lt', None)
-
-        try:
-            login_ticket = LoginTicket.objects.get(ticket=lt)
-        except:
-            errors.append(_('Login ticket expired. Please try again.'))
-        else:
-            login_ticket.delete()
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                if user.is_active:
-                    auth_login(request, user)
-                    if service is not None:
-                        ticket = create_service_ticket(user, service)
-                        return HttpResponseRedirect(service + '?ticket=' + ticket.ticket)
-                    else:
-                        return HttpResponseRedirect(success_redirect)
-                else:
-                    errors.append(_('This account is disabled.'))
-            else:
-                    errors.append(_('Incorrect username and/or password.'))
-    form = LoginForm(service)
-    return render_to_response(template_name, {'form': form, 'errors': errors}, context_instance=RequestContext(request))
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+            service = form.cleaned_data.get('service')
+            if service is not None:
+                ticket = ServiceTicket.objects.create(service=service, user=user)
+                success_redirect = ticket.get_redirect_url()
+            return HttpResponseRedirect(success_redirect)
+    else:
+        form = LoginForm(initial={
+            'service': service,
+            'lt': LoginTicket.objects.create()
+        })
+    return render_to_response(template_name, {
+        'form': form,
+        'errors': form.get_errors()
+    }, context_instance=RequestContext(request))
 
 
 def validate(request):
