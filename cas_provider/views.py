@@ -23,10 +23,16 @@ ERROR_MESSAGES = (
 
 
 def login(request, template_name='cas/login.html', \
-                success_redirect=settings.LOGIN_REDIRECT_URL):
+                success_redirect=settings.LOGIN_REDIRECT_URL,
+                warn_template_name='cas/warn.html'):
     service = request.GET.get('service', None)
     if request.user.is_authenticated():
         if service is not None:
+            if request.GET.get('warn', False):
+                return render_to_response(warn_template_name, {
+                    'service': service,
+                    'warn': False
+                }, context_instance=RequestContext(request))
             ticket = ServiceTicket.objects.create(service=service, user=request.user)
             return HttpResponseRedirect(ticket.get_redirect_url())
         else:
