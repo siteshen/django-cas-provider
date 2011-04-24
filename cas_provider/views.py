@@ -11,14 +11,16 @@ from models import ServiceTicket, LoginTicket
 __all__ = ['login', 'validate', 'logout', 'service_validate']
 
 
-INVALID_TICKET = 1
-INVALID_SERVICE = 2
-INVALID_REQUEST = 3
+INVALID_TICKET = 'INVALID_TICKET'
+INVALID_SERVICE = 'INVALID_SERVICE'
+INVALID_REQUEST = 'INVALID_REQUEST'
+INTERNAL_ERROR = 'INTERNAL_ERROR'
 
 ERROR_MESSAGES = (
     (INVALID_TICKET, u'The provided ticket is invalid.'),
     (INVALID_SERVICE, u'Service is invalid'),
     (INVALID_REQUEST, u'Not all required parameters were sent.'),
+    (INTERNAL_ERROR, u'An internal error occurred during ticket validation'),
 )
 
 
@@ -63,6 +65,9 @@ def validate(request):
     service = request.GET.get('service', None)
     ticket_string = request.GET.get('ticket', None)
     if service is not None and ticket_string is not None:
+        #renew = request.GET.get('renew', True)
+        #if not renew:
+        # TODO: check user SSO session
         try:
             ticket = ServiceTicket.objects.get(ticket=ticket_string)
             username = ticket.user.username

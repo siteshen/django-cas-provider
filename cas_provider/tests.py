@@ -30,6 +30,10 @@ class ViewsTest(TestCase):
         response = self.client.get(response['location'], follow=False)
         self.assertIn(response.status_code, [302, 200])
 
+        response = self.client.get(reverse('cas_login'), {'service': self.service, 'warn': True}, follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'cas/warn.html')
+
 
     def test_logout(self):
         response = self._login_user('root', '123')
@@ -77,6 +81,7 @@ class ViewsTest(TestCase):
         self.username = username
         response = self.client.get(reverse('cas_login'), {'service': self.service})
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'cas/login.html')
         form = response.context['form']
         service = form['service'].value()
         return self.client.post(reverse('cas_login'), {
