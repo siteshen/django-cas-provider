@@ -85,7 +85,10 @@ def service_validate(request):
             </cas:authenticationFailure>
         </cas:serviceResponse>''', mimetype='text/xml')
 
-def logout(request, template_name='cas/logout.html'):
+def logout(request, template_name='cas/logout.html', auto_redirect=False):
     url = request.GET.get('url', None)
-    auth_logout(request)
+    if request.user.is_authenticated():
+        auth_logout(request)
+        if url and auto_redirect:
+            return HttpResponseRedirect(url)
     return render_to_response(template_name, {'url': url}, context_instance=RequestContext(request))
