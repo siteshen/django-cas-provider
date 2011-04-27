@@ -2,10 +2,6 @@
 django-cas-provider
 ===================
 
----------------------------------
-Chris Williams <chris@nitron.org>
----------------------------------
-
 OVERVIEW
 =========
 
