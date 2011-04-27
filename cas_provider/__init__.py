@@ -4,7 +4,8 @@ __all__ = []
 
 _DEFAULTS = {
     'CAS_TICKET_EXPIRATION': 5, # In minutes
-    'CAS_CHECK_SERVICE': False,
+    'CAS_CUSTOM_ATTRIBUTES_CALLBACK': None,
+    'CAS_CUSTOM_ATTRIBUTES_FORMATER': 'cas_provider.attribute_formatters.jasig',
 }
 
 for key, value in _DEFAULTS.iteritems():

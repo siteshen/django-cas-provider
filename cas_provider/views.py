@@ -1,6 +1,6 @@
 from django.conf import settings
-from django.contrib.auth import login as auth_login, \
-    logout as auth_logout
+from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.core.urlresolvers import get_callable
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -70,6 +70,7 @@ def validate(request):
         # TODO: check user SSO session
         try:
             ticket = ServiceTicket.objects.get(ticket=ticket_string)
+            assert ticket.service == service
             username = ticket.user.username
             ticket.delete()
             return HttpResponse("yes\n%s\n" % username)
@@ -97,13 +98,13 @@ def service_validate(request):
     except ServiceTicket.DoesNotExist:
         return _cas2_error_response(INVALID_TICKET)
 
-    if settings.CAS_CHECK_SERVICE and ticket.service != service:
+    if ticket.service != service:
         ticket.delete()
         return _cas2_error_response(INVALID_SERVICE)
 
-    username = ticket.user.username
+    user = ticket.user
     ticket.delete()
-    return _cas2_sucess_response(username)
+    return _cas2_sucess_response(user)
 
 
 def _cas2_error_response(code):
@@ -117,9 +118,22 @@ def _cas2_error_response(code):
     }, mimetype='text/xml')
 
 
-def _cas2_sucess_response(username):
-    return HttpResponse(u'''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
-        <cas:authenticationSuccess>
-            <cas:user>%(username)s</cas:user>
-        </cas:authenticationSuccess>
-    </cas:serviceResponse>''' % {'username': username}, mimetype='text/xml')
+def _cas2_sucess_response(user):
+    return HttpResponse(auth_success_response(user), mimetype='text/xml')
+
+
+def auth_success_response(user):
+    from attribute_formatters import CAS, NSMAP, etree
+
+    response = etree.Element(CAS + 'serviceResponse', nsmap=NSMAP)
+    auth_success = etree.SubElement(response, CAS + 'authenticationSuccess')
+    username = etree.SubElement(auth_success, CAS + 'user')
+    username.text = user.username
+
+    if settings.CAS_CUSTOM_ATTRIBUTES_CALLBACK:
+        callback = get_callable(settings.CAS_CUSTOM_ATTRIBUTES_CALLBACK)
+        attrs = callback(user)
+        if len(attrs) > 0:
+            formater = get_callable(settings.CAS_CUSTOM_ATTRIBUTES_FORMATER)
+            formater(auth_success, attrs)
+    return unicode(etree.tostring(response, encoding='utf-8'), 'utf-8')

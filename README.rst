@@ -2,10 +2,6 @@
 django-cas-provider
 ===================
 
----------------------------------
-Chris Williams <chris@nitron.org>
----------------------------------
-
 OVERVIEW
 =========
 
@@ -26,7 +22,9 @@ To install, run the following command from this directory:
     	``python setup.py install``
 
 Or, put cas_provider somewhere on your Python path.
-	
+
+If you want use CAS v.2 protocol or above, you must install `lxml` package to correct work.
+
 USAGE
 ======
 
@@ -39,8 +37,16 @@ USAGE
 SETTINGS
 =========
 
-CAS_TICKET_EXPIRATION - minutes to tickets expiration (default is 5 minutes)
-CAS_CHECK_SERVICE - check if ticket service is equal with service GET argument
+CAS_TICKET_EXPIRATION - minutes to tickets expiration. Default is 5 minutes.
+
+CAS_CUSTOM_ATTRIBUTES_CALLBACK - name of callback to provide dictionary with 
+extended user attributes (may be used in CAS v.2 or above). Default is None.
+
+CAS_CUSTOM_ATTRIBUTES_FORMAT - name of custom attribute formatter callback will be
+used to format custom user attributes. This package provide module `attribute_formatters`
+with formatters for common used formats. Available formats styles are `RubyCAS`, `Jasig`
+and `Name-Value. Default is Jasig style. See module source code for more details.
+
 
 PROTOCOL DOCUMENTATION
 =====================
@@ -68,8 +74,8 @@ Optional arguments:
 * warn_template_name - warning page template name to allow login user to service if he
   already authenticated in SSO (default is 'cas/warn.html')
 
-If request.GET has 'warn' argument - it shows warning message if user has already
-authenticated in SSO instead of generate Service Ticket and redirect.
+If request.GET has 'warn' argument and user has already authenticated in SSO it shows 
+warning message instead of generate Service Ticket and redirect.
 
 logout
 -----------
@@ -100,4 +106,58 @@ Work with proxy is not supported yet.
 
 It has not arguments.
 
+
+CUSTOM USER ATTRIBUTES FORMAT
+===========================
+
+Custom attribute format style may be changed in project settings with 
+CAS_CUSTOM_ATTRIBUTES_FORMAT constant. You can provide your own formatter callback
+or specify existing in this package in `attribute_formatters` module.
+
+Attribute formatter callback takes two arguments:
+
+*  `auth_success` - `cas:authenticationSuccess` node. It is `lxml.etree.SubElement`instance;
+*  `attrs` - dictionary with user attributes received from callback specified in 
+    CAS_CUSTOM_ATTRIBUTES_CALLBACK in project settings. 
+
+Example of generated XML below:
+ 
+     <cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
+         <cas:authenticationSuccess>
+             <cas:user>jsmith</cas:user>
+
+             <!-- extended user attributes wiil be here -->
+
+             <cas:proxyGrantingTicket>PGTIOU-84678-8a9d2sfa23casd</cas:proxyGrantingTicket>
+         </cas:authenticationSuccess>
+     </cas:serviceResponse>
+
+
+* Name-Value style (provided in `cas_provider.attribute_formatters.name_value`):
+
+    <cas:attribute name='attraStyle' value='Name-Value' />
+    <cas:attribute name='surname' value='Smith' />
+    <cas:attribute name='givenName' value='John' />
+    <cas:attribute name='memberOf' value='CN=Staff,OU=Groups,DC=example,DC=edu' />
+    <cas:attribute name='memberOf' value='CN=Spanish Department,OU=Departments,OU=Groups,DC=example,DC=edu' />
+
+
+*  Jasig Style attributes (provided in `cas_provider.attribute_formatters.jasig`):
+
+    <cas:attributes>
+        <cas:attraStyle>Jasig</cas:attraStyle>
+        <cas:surname>Smith</cas:surname>
+        <cas:givenName>John</cas:givenName>
+        <cas:memberOf>CN=Staff,OU=Groups,DC=example,DC=edu</cas:memberOf>
+        <cas:memberOf>CN=Spanish Department,OU=Departments,OU=Groups,DC=example,DC=edu</cas:memberOf>
+    </cas:attributes>
+
+
+* RubyCAS style (provided in `cas_provider.attribute_formatters.ruby_cas`):
+
+    <cas:attraStyle>RubyCAS</cas:attraStyle>
+    <cas:surname>Smith</cas:surname>
+    <cas:givenName>John</cas:givenName>
+    <cas:memberOf>CN=Staff,OU=Groups,DC=example,DC=edu</cas:memberOf>
+    <cas:memberOf>CN=Spanish Department,OU=Departments,OU=Groups,DC=example,DC=edu</cas:memberOf>
 
