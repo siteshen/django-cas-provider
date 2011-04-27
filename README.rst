@@ -5,26 +5,21 @@ django-cas-provider
 OVERVIEW
 =========
 
-django-cas-provider is a provider for the `Central Authentication 
-Service <http://jasig.org/cas>`_. It supports CAS version 1.0. It allows 
-remote services to authenticate users for the purposes of 
-Single Sign-On (SSO). For example, a user logs into a CAS server 
-(provided by django-cas-provider) and can then access other services 
-(such as email, calendar, etc) without re-entering her password for
-each service. For more details, see the `CAS wiki <http://www.ja-sig.org/wiki/display/CAS/Home>`_
-and `Single Sign-On on Wikipedia <http://en.wikipedia.org/wiki/Single_Sign_On>`_.
+django-cas-provider is a provider for the `Central Authentication Service <http://jasig.org/cas>`_. It supports CAS version 1.0 and parts of CAS version 2.0 protocol. It allows remote services to authenticate users for the purposes of Single Sign-On (SSO). For example, a user logs into a CAS server 
+(provided by django-cas-provider) and can then access other services (such as email, calendar, etc) without re-entering her password for each service. For more details, see the `CAS wiki <http://www.ja-sig.org/wiki/display/CAS/Home>`_ and `Single Sign-On on Wikipedia <http://en.wikipedia.org/wiki/Single_Sign_On>`_.
 
 INSTALLATION
 =============
 
-To install, run the following command from this directory:
+To install, run the following command from this directory::
 
-    	``python setup.py install``
+    python setup.py install
 
-Or, put cas_provider somewhere on your Python path.
+Or, put `cas_provider` somewhere on your Python path.
 
 If you want use CAS v.2 protocol or above, you must install `lxml` package to correct work.
 
+	
 USAGE
 ======
 
@@ -120,7 +115,7 @@ Attribute formatter callback takes two arguments:
 *  `attrs` - dictionary with user attributes received from callback specified in 
     CAS_CUSTOM_ATTRIBUTES_CALLBACK in project settings. 
 
-Example of generated XML below:
+Example of generated XML below::
  
      <cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
          <cas:authenticationSuccess>
@@ -133,7 +128,7 @@ Example of generated XML below:
      </cas:serviceResponse>
 
 
-* Name-Value style (provided in `cas_provider.attribute_formatters.name_value`):
+* Name-Value style (provided in `cas_provider.attribute_formatters.name_value`)::
 
     <cas:attribute name='attraStyle' value='Name-Value' />
     <cas:attribute name='surname' value='Smith' />
@@ -142,7 +137,7 @@ Example of generated XML below:
     <cas:attribute name='memberOf' value='CN=Spanish Department,OU=Departments,OU=Groups,DC=example,DC=edu' />
 
 
-*  Jasig Style attributes (provided in `cas_provider.attribute_formatters.jasig`):
+*  Jasig Style attributes (provided in `cas_provider.attribute_formatters.jasig`)::
 
     <cas:attributes>
         <cas:attraStyle>Jasig</cas:attraStyle>
@@ -153,7 +148,7 @@ Example of generated XML below:
     </cas:attributes>
 
 
-* RubyCAS style (provided in `cas_provider.attribute_formatters.ruby_cas`):
+* RubyCAS style (provided in `cas_provider.attribute_formatters.ruby_cas`)::
 
     <cas:attraStyle>RubyCAS</cas:attraStyle>
     <cas:surname>Smith</cas:surname>
