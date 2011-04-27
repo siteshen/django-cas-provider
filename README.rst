@@ -42,6 +42,10 @@ used to format custom user attributes. This package provide module `attribute_fo
 with formatters for common used formats. Available formats styles are `RubyCAS`, `Jasig`
 and `Name-Value. Default is Jasig style. See module source code for more details.
 
+CAS_AUTO_REDIRECT_AFTER_LOGOUT - If False (default behavior, specified in CAS protocol)
+after successful logout notification page will be shown. If it's True, after successful logout will
+be auto redirect back to service without any notification.
+
 
 PROTOCOL DOCUMENTATION
 =====================

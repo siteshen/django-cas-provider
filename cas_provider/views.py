@@ -79,7 +79,8 @@ def validate(request):
     return HttpResponse("no\n\n")
 
 
-def logout(request, template_name='cas/logout.html', auto_redirect=False):
+def logout(request, template_name='cas/logout.html', \
+                auto_redirect=settings.CAS_AUTO_REDIRECT_AFTER_LOGOUT):
     url = request.GET.get('url', None)
     if request.user.is_authenticated():
         auth_logout(request)
