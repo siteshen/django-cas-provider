@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from urlparse import urlparse
+from django.conf import settings
 
 
 class ViewsTest(TestCase):
@@ -35,12 +36,16 @@ class ViewsTest(TestCase):
         self.assertTemplateUsed(response, 'cas/warn.html')
 
 
+    def _cas_logout(self):
+        response = self.client.get(reverse('cas_logout'), follow=False)
+        self.assertEqual(response.status_code, 200)
+
+
     def test_logout(self):
         response = self._login_user('root', '123')
         self._validate_cas1(response, True)
 
-        response = self.client.get(reverse('cas_logout'), follow=False)
-        self.assertEqual(response.status_code, 200)
+        self._cas_logout()
 
         response = self.client.get(reverse('cas_login'), follow=False)
         self.assertEqual(response.status_code, 200)
@@ -58,7 +63,58 @@ class ViewsTest(TestCase):
 
     def test_cas2_success_validate(self):
         response = self._login_user('root', '123')
-        self._validate_cas2(response, True)
+        response = self._validate_cas2(response, True)
+        user = User.objects.get(username=self.username)
+        self.assertEqual(response.content, _cas2_sucess_response(user).content)
+
+    def test_cas2_custom_attrs(self):
+        settings.CAS_CUSTOM_ATTRIBUTES_CALLBACK = cas_mapping
+        response = self._login_user('editor', '123')
+
+        response = self._validate_cas2(response, True)
+        self.assertEqual(response.content, '''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">'''
+            '''<cas:authenticationSuccess>'''
+                '''<cas:user>editor</cas:user>'''
+                '''<cas:attributes>'''
+                    '''<cas:attraStyle>Jasig</cas:attraStyle>'''
+                    '''<cas:group>editor</cas:group>'''
+                    '''<cas:is_staff>True</cas:is_staff>'''
+                    '''<cas:is_active>True</cas:is_active>'''
+                    '''<cas:email>editor@exapmle.com</cas:email>'''
+                '''</cas:attributes>'''
+            '''</cas:authenticationSuccess>'''
+        '''</cas:serviceResponse>''')
+
+        self._cas_logout()
+        response = self._login_user('editor', '123')
+        settings.CAS_CUSTOM_ATTRIBUTES_FORMATER = 'cas_provider.attribute_formatters.ruby_cas'
+        response = self._validate_cas2(response, True)
+        self.assertEqual(response.content, '''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">'''
+            '''<cas:authenticationSuccess>'''
+                '''<cas:user>editor</cas:user>'''
+                '''<cas:attraStyle>RubyCAS</cas:attraStyle>'''
+                '''<cas:group>editor</cas:group>'''
+                '''<cas:is_staff>True</cas:is_staff>'''
+                '''<cas:is_active>True</cas:is_active>'''
+                '''<cas:email>editor@exapmle.com</cas:email>'''
+            '''</cas:authenticationSuccess>'''
+        '''</cas:serviceResponse>''')
+
+        self._cas_logout()
+        response = self._login_user('editor', '123')
+        settings.CAS_CUSTOM_ATTRIBUTES_FORMATER = 'cas_provider.attribute_formatters.name_value'
+        response = self._validate_cas2(response, True)
+        self.assertEqual(response.content, '''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">'''
+            '''<cas:authenticationSuccess>'''
+                '''<cas:user>editor</cas:user>'''
+                    '''<cas:attribute name="attraStyle" value="Name-Value"/>'''
+                    '''<cas:attribute name="group" value="editor"/>'''
+                    '''<cas:attribute name="is_staff" value="True"/>'''
+                    '''<cas:attribute name="is_active" value="True"/>'''
+                    '''<cas:attribute name="email" value="editor@exapmle.com"/>'''
+            '''</cas:authenticationSuccess>'''
+        '''</cas:serviceResponse>''')
+
 
     def test_cas2_fail_validate(self):
         for user, pwd in (('root', '321'), ('notroot', '123'), ('nonactive', '123')):
@@ -120,7 +176,6 @@ class ViewsTest(TestCase):
 
             response = self.client.get(reverse('cas_service_validate'), {'ticket': ticket, 'service': self.service}, follow=False)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, _cas2_sucess_response(self.username).content)
         else:
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.context['form'].errors), 1)
@@ -128,6 +183,7 @@ class ViewsTest(TestCase):
             response = self.client.get(reverse('cas_service_validate'), {'ticket': 'ST-12312312312312312312312', 'service': self.service}, follow=False)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.content, _cas2_error_response(INVALID_TICKET).content)
+        return response
 
 
 class ModelsTestCase(TestCase):
@@ -141,3 +197,11 @@ class ModelsTestCase(TestCase):
         ticket = ServiceTicket.objects.create(service='http://example.com', user=self.user)
         self.assertEqual(ticket.get_redirect_url(), '%(service)s?ticket=%(ticket)s' % ticket.__dict__)
 
+
+def cas_mapping(user):
+    return {
+        'is_staff': unicode(user.is_staff),
+        'is_active': unicode(user.is_active),
+        'email': user.email,
+        'group': [g.name for g in user.groups.all()]
+    }
