@@ -9,6 +9,7 @@ setup(
     author_email='chris@nitron.org',
     url='http://nitron.org/',
     packages=find_packages(),
+    include_package_data=True,
     zip_safe=False,
     install_requires=['setuptools'],
 )

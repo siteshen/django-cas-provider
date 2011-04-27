@@ -1,6 +1,7 @@
 from django.contrib import admin
 from models import *
 
+
 class ServiceTicketAdmin(admin.ModelAdmin):
     list_display = ('user', 'service', 'created')
     list_filter = ('created',)
