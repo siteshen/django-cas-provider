@@ -26,7 +26,8 @@ ERROR_MESSAGES = (
 
 def login(request, template_name='cas/login.html', \
                 success_redirect=settings.LOGIN_REDIRECT_URL,
-                warn_template_name='cas/warn.html'):
+                warn_template_name='cas/warn.html',
+                form_class=LoginForm):
     service = request.GET.get('service', None)
     if request.user.is_authenticated():
         if service is not None:
@@ -40,7 +41,7 @@ def login(request, template_name='cas/login.html', \
         else:
             return HttpResponseRedirect(success_redirect)
     if request.method == 'POST':
-        form = LoginForm(request.POST)
+        form = form_class(data=request.POST, request=request)
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
@@ -50,13 +51,15 @@ def login(request, template_name='cas/login.html', \
                 success_redirect = ticket.get_redirect_url()
             return HttpResponseRedirect(success_redirect)
     else:
-        form = LoginForm(initial={
+        form = form_class(request=request, initial={
             'service': service,
             'lt': LoginTicket.objects.create()
         })
+    if hasattr(request, 'session') and hasattr(request.session, 'set_test_cookie'):
+        request.session.set_test_cookie()
     return render_to_response(template_name, {
         'form': form,
-        'errors': form.get_errors()
+        'errors': form.get_errors() if hasattr(form, 'get_errors') else None,
     }, context_instance=RequestContext(request))
 
 
