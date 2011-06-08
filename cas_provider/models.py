@@ -6,6 +6,12 @@ import string
 import urllib
 import urlparse
 
+if hasattr(urlparse, 'parse_qs'):
+    parse_qs = urlparse.parse_qs
+else:
+    # Python <2.6 compatibility
+    from cgi import parse_qs
+
 
 __all__ = ['ServiceTicket', 'LoginTicket']
 
@@ -42,7 +48,7 @@ class ServiceTicket(BaseTicket):
 
     def get_redirect_url(self):
         parsed = urlparse.urlparse(self.service)
-        query = urlparse.parse_qs(parsed.query)
+        query = parse_qs(parsed.query)
         query['ticket'] = [self.ticket]
         query = [ ((k, v) if len(v) > 1 else (k, v[0])) for k, v in query.iteritems()]
         parsed = urlparse.ParseResult(parsed.scheme, parsed.netloc,
