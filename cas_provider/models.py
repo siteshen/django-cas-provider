@@ -12,9 +12,7 @@ else:
     # Python <2.6 compatibility
     from cgi import parse_qs
 
-
 __all__ = ['ServiceTicket', 'LoginTicket']
-
 
 class BaseTicket(models.Model):
     ticket = models.CharField(_('ticket'), max_length=32)
@@ -50,17 +48,53 @@ class ServiceTicket(BaseTicket):
         parsed = urlparse.urlparse(self.service)
         query = parse_qs(parsed.query)
         query['ticket'] = [self.ticket]
-        query = [ ((k, v) if len(v) > 1 else (k, v[0])) for k, v in query.iteritems()]
+        query = [((k, v) if len(v) > 1 else (k, v[0])) for k, v in query.iteritems()]
         parsed = urlparse.ParseResult(parsed.scheme, parsed.netloc,
-                                  parsed.path, parsed.params,
-                                  urllib.urlencode(query), parsed.fragment)
+                                      parsed.path, parsed.params,
+                                      urllib.urlencode(query), parsed.fragment)
         return parsed.geturl()
 
 
 class LoginTicket(BaseTicket):
-
     prefix = 'LT'
 
     class Meta:
         verbose_name = _('Login Ticket')
         verbose_name_plural = _('Login Tickets')
+
+
+class ProxyGrantingTicket(BaseTicket):
+    serviceTicket = models.ForeignKey(ServiceTicket, null=True)
+    pgtiou = models.CharField(max_length=256, verbose_name=_('PGTiou'))
+    prefix = 'PGT'
+
+    def __init__(self, *args, **kwargs):
+        if 'pgtiou' not in kwargs:
+            kwargs['pgtiou'] = u"PGTIOU-%s" % (''.join(Random().sample(string.ascii_letters + string.digits, 50)))
+        super(ProxyGrantingTicket, self).__init__(*args, **kwargs)
+
+    class Meta:
+        verbose_name = _('Proxy Granting Ticket')
+        verbose_name_plural = _('Proxy Granting Tickets')
+
+
+class ProxyTicket(ServiceTicket):
+    proxyGrantingTicket = models.ForeignKey(ProxyGrantingTicket, verbose_name=_('Proxy Granting Ticket'))
+
+    prefix = 'PT'
+
+    class Meta:
+        verbose_name = _('Proxy Ticket')
+        verbose_name_plural = _('Proxy Tickets')
+
+
+class ProxyGrantingTicketIOU(BaseTicket):
+    proxyGrantingTicket = models.ForeignKey(ProxyGrantingTicket, verbose_name=_('Proxy Granting Ticket'))
+
+    prefix = 'PGTIOU'
+
+    class Meta:
+        verbose_name = _('Proxy Granting Ticket IOU')
+        verbose_name_plural = _('Proxy Granting Tickets IOU')
+
+

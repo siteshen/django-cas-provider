@@ -26,7 +26,7 @@ class LoginForm(AuthenticationForm):
         return ticket
 
     def clean(self):
-        super(LoginForm, self).clean(self)
+        AuthenticationForm.clean(self)
         self.cleaned_data.get('lt').delete()
         return self.cleaned_data
 
