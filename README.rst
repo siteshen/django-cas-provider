@@ -5,8 +5,12 @@ django-cas-provider
 OVERVIEW
 =========
 
-django-cas-provider is a provider for the `Central Authentication Service <http://jasig.org/cas>`_. It supports CAS version 1.0 and parts of CAS version 2.0 protocol. It allows remote services to authenticate users for the purposes of Single Sign-On (SSO). For example, a user logs into a CAS server 
-(provided by django-cas-provider) and can then access other services (such as email, calendar, etc) without re-entering her password for each service. For more details, see the `CAS wiki <http://www.ja-sig.org/wiki/display/CAS/Home>`_ and `Single Sign-On on Wikipedia <http://en.wikipedia.org/wiki/Single_Sign_On>`_.
+django-cas-provider is a provider for the `Central Authentication Service <http://jasig.org/cas>`_. It supports 
+CAS version 1.0 and CAS version 2.0 protocol. It allows remote services to authenticate users for the purposes 
+of Single Sign-On (SSO). For example, a user logs into a CAS server (provided by django-cas-provider) and can 
+then access other services (such as email, calendar, etc) without re-entering her password for each service. 
+For more details, see the `CAS wiki <http://www.ja-sig.org/wiki/display/CAS/Home>`_ and 
+`Single Sign-On on Wikipedia <http://en.wikipedia.org/wiki/Single_Sign_On>`_.
 
 INSTALLATION
 =============
@@ -92,7 +96,7 @@ Optional arguments:
 validate
 -------------
 
-It checks the validity of a service ticket. It is part of the CAS 1.0 protocol and thus does
+It checks the validity of a Service ticket. It is part of the CAS 1.0 protocol and thus does
 not handle proxy authentication.
 
 It has not arguments. 
@@ -100,8 +104,17 @@ It has not arguments.
 service_validate
 -------------------------
 
-It checks the validity of a service ticket and returns an XML-fragment response via CAS 2.0 protocol.
-Work with proxy is not supported yet.
+It checks the validity of a Service Ticket and returns an XML-fragment response via CAS 2.0 protocol.
+It has not arguments.
+
+proxy_validate
+-------------------------
+
+It checks the validity of a Proxy Ticket and returns an XML-fragment response via CAS 2.0 protocol.
+
+proxy
+-------------------------
+Creates a proxy ticket for a given Proxy Granting Ticket.
 
 It has not arguments.
 
