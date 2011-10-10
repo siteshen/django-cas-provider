@@ -98,4 +98,3 @@ class ProxyGrantingTicketIOU(BaseTicket):
         verbose_name = _('Proxy Granting Ticket IOU')
         verbose_name_plural = _('Proxy Granting Tickets IOU')
 
-
