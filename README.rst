@@ -99,24 +99,27 @@ validate
 It checks the validity of a Service ticket. It is part of the CAS 1.0 protocol and thus does
 not handle proxy authentication.
 
-It has not arguments. 
+It has no arguments. 
 
 service_validate
 -------------------------
 
 It checks the validity of a Service Ticket and returns an XML-fragment response via CAS 2.0 protocol.
-It has not arguments.
+
+It has no arguments.
 
 proxy_validate
 -------------------------
 
 It checks the validity of a Proxy Ticket and returns an XML-fragment response via CAS 2.0 protocol.
 
+It has no arguments.
+
 proxy
 -------------------------
 Creates a proxy ticket for a given Proxy Granting Ticket.
 
-It has not arguments.
+It has no arguments.
 
 
 CUSTOM USER ATTRIBUTES FORMAT
