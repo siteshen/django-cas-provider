@@ -5,12 +5,8 @@ django-cas-provider
 OVERVIEW
 =========
 
-django-cas-provider is a provider for the `Central Authentication Service <http://jasig.org/cas>`_. It supports 
-CAS version 1.0 and CAS version 2.0 protocol. It allows remote services to authenticate users for the purposes 
-of Single Sign-On (SSO). For example, a user logs into a CAS server (provided by django-cas-provider) and can 
-then access other services (such as email, calendar, etc) without re-entering her password for each service. 
-For more details, see the `CAS wiki <http://www.ja-sig.org/wiki/display/CAS/Home>`_ and 
-`Single Sign-On on Wikipedia <http://en.wikipedia.org/wiki/Single_Sign_On>`_.
+django-cas-provider is a provider for the `Central Authentication Service <http://jasig.org/cas>`_. It supports CAS version 1.0 and parts of CAS version 2.0 protocol. It allows remote services to authenticate users for the purposes of Single Sign-On (SSO). For example, a user logs into a CAS server
+(provided by django-cas-provider) and can then access other services (such as email, calendar, etc) without re-entering her password for each service. For more details, see the `CAS wiki <http://www.ja-sig.org/wiki/display/CAS/Home>`_ and `Single Sign-On on Wikipedia <http://en.wikipedia.org/wiki/Single_Sign_On>`_.
 
 INSTALLATION
 =============
@@ -23,7 +19,24 @@ Or, put `cas_provider` somewhere on your Python path.
 
 If you want use CAS v.2 protocol or above, you must install `lxml` package to correct work.
 
-	
+UPDATING FROM PREVIOUS VERSION
+===============================
+
+I introduced south for DB schema migration. The schema from any previous version without south is 0001_initial.
+You will get an error:
+
+ Running migrations for cas_provider:
+  - Migrating forwards to 0001_initial.
+  > cas_provider:0001_initial
+ Traceback (most recent call last):
+ ...
+ django.db.utils.DatabaseError: relation "cas_provider_serviceticket" already exists
+
+to circumvent that problem you will need to fake the initial migration:
+
+ python manage.py migrate cas_provider 0001_initial --fake
+
+
 USAGE
 ======
 
@@ -38,7 +51,7 @@ SETTINGS
 
 CAS_TICKET_EXPIRATION - minutes to tickets expiration. Default is 5 minutes.
 
-CAS_CUSTOM_ATTRIBUTES_CALLBACK - name of callback to provide dictionary with 
+CAS_CUSTOM_ATTRIBUTES_CALLBACK - name of callback to provide dictionary with
 extended user attributes (may be used in CAS v.2 or above). Default is None.
 
 CAS_CUSTOM_ATTRIBUTES_FORMAT - name of custom attribute formatter callback will be
@@ -72,18 +85,18 @@ It has not required arguments.
 Optional arguments:
 
 * template_name - login form template name (default is 'cas/login.html')
-* success_redirect - redirect after successful login if service GET argument is not provided 
+* success_redirect - redirect after successful login if service GET argument is not provided
    (default is settings.LOGIN_REDIRECT_URL)
 * warn_template_name - warning page template name to allow login user to service if he
   already authenticated in SSO (default is 'cas/warn.html')
 
-If request.GET has 'warn' argument and user has already authenticated in SSO it shows 
+If request.GET has 'warn' argument and user has already authenticated in SSO it shows
 warning message instead of generate Service Ticket and redirect.
 
 logout
 -----------
 
-This destroys a client's single sign-on CAS session. The ticket-granting cookie is destroyed, 
+This destroys a client's single sign-on CAS session. The ticket-granting cookie is destroyed,
 and subsequent requests to login view will not obtain service tickets until the user again
 presents primary credentials (and thereby establishes a new single sign-on session).
 
@@ -96,30 +109,18 @@ Optional arguments:
 validate
 -------------
 
-It checks the validity of a Service ticket. It is part of the CAS 1.0 protocol and thus does
+It checks the validity of a service ticket. It is part of the CAS 1.0 protocol and thus does
 not handle proxy authentication.
 
-It has no arguments. 
+It has not arguments.
 
 service_validate
 -------------------------
 
-It checks the validity of a Service Ticket and returns an XML-fragment response via CAS 2.0 protocol.
+It checks the validity of a service ticket and returns an XML-fragment response via CAS 2.0 protocol.
+Work with proxy is not supported yet.
 
-It has no arguments.
-
-proxy_validate
--------------------------
-
-It checks the validity of a Proxy Ticket and returns an XML-fragment response via CAS 2.0 protocol.
-
-It has no arguments.
-
-proxy
--------------------------
-Creates a proxy ticket for a given Proxy Granting Ticket.
-
-It has no arguments.
+It has not arguments.
 
 
 CUSTOM USER ATTRIBUTES FORMAT
