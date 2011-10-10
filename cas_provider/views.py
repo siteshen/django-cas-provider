@@ -90,16 +90,17 @@ def logout(request, template_name='cas/logout.html',
            auto_redirect=settings.CAS_AUTO_REDIRECT_AFTER_LOGOUT):
     url = request.GET.get('url', None)
     if request.user.is_authenticated():
-        for ticket in ServiceTicket.objects.filter(user = request.user):
+        for ticket in ServiceTicket.objects.filter(user=request.user):
             ticket.delete()
         auth_logout(request)
         if url and auto_redirect:
             return HttpResponseRedirect(url)
-    return render_to_response(template_name, {'url': url},\
-                              context_instance=RequestContext(request))
+    return render_to_response(template_name, {'url': url},
+        context_instance=RequestContext(request))
+
 
 def proxy(request):
-    targetService =  request.GET['targetService']
+    targetService = request.GET['targetService']
     pgtiou = request.GET['pgt']
 
     try:
@@ -107,7 +108,12 @@ def proxy(request):
     except ProxyGrantingTicket.DoesNotExist:
         return _cas2_error_response(INVALID_TICKET)
 
-    pt = ProxyTicket.objects.create(proxyGrantingTicket = proxyGrantingTicket,
+    if not proxyGrantingTicket.targetService == targetService:
+        return _cas2_error_response(INVALID_SERVICE,
+            "The PGT was issued for %(original)s but the PT was requested for %(but)s" % dict(
+                original=proxyGrantingTicket.targetService, but=targetService))
+
+    pt = ProxyTicket.objects.create(proxyGrantingTicket=proxyGrantingTicket,
         user=proxyGrantingTicket.serviceTicket.user,
         service=targetService)
     return _cas2_proxy_success(pt.ticket)
@@ -118,13 +124,19 @@ def ticket_validate(service, ticket_string, pgtUrl):
         return _cas2_error_response(INVALID_REQUEST)
 
     try:
-        ticket = ServiceTicket.objects.get(ticket=ticket_string)
+        if ticket_string.startswith('ST'):
+            ticket = ServiceTicket.objects.get(ticket=ticket_string)
+        elif ticket_string.startswith('PT'):
+            ticket = ProxyTicket.objects.get(ticket=ticket_string)
+        else:
+            return _cas2_error_response(INVALID_TICKET,
+                '%(ticket)s is neither Service (ST-...) nor Proxy Ticket (PT-...)' % {
+                    'ticket': ticket_string})
     except ServiceTicket.DoesNotExist:
         return _cas2_error_response(INVALID_TICKET)
 
     if ticket.service != service:
         return _cas2_error_response(INVALID_SERVICE)
-
 
     pgtIouId = None
     proxies = ()
@@ -133,10 +145,16 @@ def ticket_validate(service, ticket_string, pgtUrl):
         if pgt:
             pgtIouId = pgt.pgtiou
 
+    if hasattr(ticket, 'proxyticket'):
+        pgt = ticket.proxyticket.proxyGrantingTicket
+        # I am issued by this proxy granting ticket
+        if hasattr(pgt.serviceTicket, 'proxyticket'):
             while pgt:
-                proxies += (pgt.serviceTicket.service,)
-                pgt = pgt.serviceTicket.proxyGrantingTicket if hasattr(pgt.serviceTicket, 'proxyGrantingTicket') else None
-
+                if hasattr(pgt.serviceTicket, 'proxyticket'):
+                    proxies += (pgt.serviceTicket.service,)
+                    pgt = pgt.serviceTicket.proxyticket.proxyGrantingTicket
+                else:
+                    pgt = None
 
     user = ticket.user
     return _cas2_sucess_response(user, pgtIouId, proxies)
@@ -160,12 +178,14 @@ def proxy_validate(request):
     pgtUrl = request.GET.get('pgtUrl', None)
     return ticket_validate(service, ticket_string, pgtUrl)
 
+
 def generate_proxy_granting_ticket(pgt_url, ticket):
     proxy_callback_good_status = (200, 202, 301, 302, 304)
     uri = list(urlparse.urlsplit(pgt_url))
 
     pgt = ProxyGrantingTicket()
     pgt.serviceTicket = ticket
+    pgt.targetService = pgt_url
 
     if hasattr(ticket, 'proxyGrantingTicket'):
         # here we got a proxy ticket! tata!
@@ -177,7 +197,6 @@ def generate_proxy_granting_ticket(pgt_url, ticket):
     query.update(params)
 
     uri[4] = urlencode(query)
-
 
     try:
         response = urllib2.urlopen(urlparse.urlunsplit(uri))
@@ -194,18 +213,21 @@ def generate_proxy_granting_ticket(pgt_url, ticket):
 def _cas2_proxy_success(pt):
     return HttpResponse(proxy_success(pt))
 
-def _cas2_sucess_response(user, pgt = None, proxies = None):
+
+def _cas2_sucess_response(user, pgt=None, proxies=None):
     return HttpResponse(auth_success_response(user, pgt, proxies), mimetype='text/xml')
 
-def _cas2_error_response(code, message = None):
-    return HttpResponse(u''''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+
+def _cas2_error_response(code, message=None):
+    return HttpResponse(u'''<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
             <cas:authenticationFailure code="%(code)s">
                 %(message)s
             </cas:authenticationFailure>
         </cas:serviceResponse>''' % {
-            'code': code,
-            'message': message if message else dict(ERROR_MESSAGES).get(code)
+        'code': code,
+        'message': message if message else dict(ERROR_MESSAGES).get(code)
     }, mimetype='text/xml')
+
 
 def proxy_success(pt):
     response = etree.Element(CAS + 'serviceResponse', nsmap=NSMAP)
@@ -214,9 +236,8 @@ def proxy_success(pt):
     proxyTicket.text = pt
     return unicode(etree.tostring(response, encoding='utf-8'), 'utf-8')
 
+
 def auth_success_response(user, pgt, proxies):
-
-
     response = etree.Element(CAS + 'serviceResponse', nsmap=NSMAP)
     auth_success = etree.SubElement(response, CAS + 'authenticationSuccess')
     username = etree.SubElement(auth_success, CAS + 'user')
@@ -229,17 +250,14 @@ def auth_success_response(user, pgt, proxies):
             formater = get_callable(settings.CAS_CUSTOM_ATTRIBUTES_FORMATER)
             formater(auth_success, attrs)
 
-
     if pgt:
         pgtElement = etree.SubElement(auth_success, CAS + 'proxyGrantingTicket')
         pgtElement.text = pgt
 
     if proxies:
-        proxiesElement = etree.SubElement(auth_success , CAS + "proxies")
+        proxiesElement = etree.SubElement(auth_success, CAS + "proxies")
         for proxy in proxies:
             proxyElement = etree.SubElement(proxiesElement, CAS + "proxy")
             proxyElement.text = proxy
-
-
 
     return unicode(etree.tostring(response, encoding='utf-8'), 'utf-8')

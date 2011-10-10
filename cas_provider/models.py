@@ -66,6 +66,7 @@ class LoginTicket(BaseTicket):
 class ProxyGrantingTicket(BaseTicket):
     serviceTicket = models.ForeignKey(ServiceTicket, null=True)
     pgtiou = models.CharField(max_length=256, verbose_name=_('PGTiou'))
+    targetService = models.URLField(_('service'), verify_exists=False)
     prefix = 'PGT'
 
     def __init__(self, *args, **kwargs):
