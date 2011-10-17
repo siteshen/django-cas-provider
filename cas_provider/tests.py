@@ -49,8 +49,10 @@ class ViewsTest(TestCase):
         self.assertIsNotNone(pgt.text)
         self.assertTrue(pgt.text.startswith('PGTIOU'))
 
+        pgtId = parse_qs(urlparse(cas_provider.tests.dummy_urlopen_url).query)['pgtId']
+
         #Step 2: Get the actual proxy ticket
-        proxyTicketResponse = self.client.get(reverse('proxy'), {'targetService': proxyTarget, 'pgt': pgt.text}, follow=False)
+        proxyTicketResponse = self.client.get(reverse('proxy'), {'targetService': proxyTarget, 'pgt': pgtId}, follow=False)
         proxyTicketResponseXml = ElementTree.parse(StringIO.StringIO(proxyTicketResponse.content))
         self.assertIsNotNone(proxyTicketResponseXml.find(CAS + "proxySuccess", namespaces=NSMAP))
         self.assertIsNotNone(proxyTicketResponseXml.find(CAS + "proxySuccess/cas:proxyTicket", namespaces=NSMAP))
@@ -86,8 +88,10 @@ class ViewsTest(TestCase):
         self.assertIsNotNone(pgt_1.text)
         self.assertTrue(pgt_1.text.startswith('PGTIOU'))
 
+        pgtId_1 = parse_qs(urlparse(cas_provider.tests.dummy_urlopen_url).query)['pgtId']
+
         #Step 2: Get the actual proxy ticket
-        proxyTicketResponse_1 = self.client.get(reverse('proxy'), {'targetService': proxyTarget_1, 'pgt': pgt_1.text}, follow=False)
+        proxyTicketResponse_1 = self.client.get(reverse('proxy'), {'targetService': proxyTarget_1, 'pgt': pgtId_1}, follow=False)
         proxyTicketResponseXml_1 = ElementTree.parse(StringIO.StringIO(proxyTicketResponse_1.content))
         self.assertIsNotNone(proxyTicketResponseXml_1.find(CAS + "proxySuccess", namespaces=NSMAP))
         self.assertIsNotNone(proxyTicketResponseXml_1.find(CAS + "proxySuccess/cas:proxyTicket", namespaces=NSMAP))
@@ -112,8 +116,10 @@ class ViewsTest(TestCase):
         self.assertIsNotNone(pgt_2.text)
         self.assertTrue(pgt_2.text.startswith('PGTIOU'))
 
+        pgtId_2 = parse_qs(urlparse(cas_provider.tests.dummy_urlopen_url).query)['pgtId']
+
         #Step 4: Get the second proxy ticket
-        proxyTicketResponse_2 = self.client.get(reverse('proxy'), {'targetService': proxyTarget_2, 'pgt': pgt_2.text})
+        proxyTicketResponse_2 = self.client.get(reverse('proxy'), {'targetService': proxyTarget_2, 'pgt': pgtId_2})
         proxyTicketResponseXml_2 = ElementTree.parse(StringIO.StringIO(proxyTicketResponse_2.content))
         self.assertIsNotNone(proxyTicketResponseXml_2.find(CAS + "proxySuccess", namespaces=NSMAP))
         self.assertIsNotNone(proxyTicketResponseXml_2.find(CAS + "proxySuccess/cas:proxyTicket", namespaces=NSMAP))
@@ -135,30 +141,7 @@ class ViewsTest(TestCase):
 
 
 
-    def test_successful_service_not_matching_in_request_to_proxy(self):
-        urllib2.urlopen = dummy_urlopen # monkey patching urllib2.urlopen so that the testcase doesnt really opens a url
-        proxyTarget_1 = "http://my.sweet.service"
-        proxyTarget_2 = "http://my.malicious.service"
-
-        response = self._login_user('root', '123')
-        response = self._validate_cas2(response, True, proxyTarget_1 )
-
-        # Test: I'm acting as the service that will call another service
-        # Step 1: Get the proxy granting ticket
-        responseXml = ElementTree.parse(StringIO.StringIO(response.content))
-        auth_success = responseXml.find(CAS + 'authenticationSuccess', namespaces=NSMAP)
-        pgt = auth_success.find(CAS + "proxyGrantingTicket", namespaces=NSMAP)
-        user = auth_success.find(CAS + "user", namespaces=NSMAP)
-        self.assertEqual('root', user.text)
-        self.assertIsNotNone(pgt.text)
-        self.assertTrue(pgt.text.startswith('PGTIOU'))
-
-        #Step 2: Get the actual proxy ticket
-        proxyTicketResponse = self.client.get(reverse('proxy'), {'targetService': proxyTarget_2, 'pgt': pgt.text}, follow=False)
-        proxyTicketResponseXml = ElementTree.parse(StringIO.StringIO(proxyTicketResponse.content))
-        self.assertIsNotNone(proxyTicketResponseXml.find(CAS + "authenticationFailure", namespaces=NSMAP))
-
-
+    
     def test_succeessful_login(self):
         response = self._login_user('root', '123')
         self._validate_cas1(response, True)

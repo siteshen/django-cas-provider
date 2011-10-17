@@ -29,9 +29,9 @@ class BaseTicket(models.Model):
     def __unicode__(self):
         return self.ticket
 
-    def _generate_ticket(self, length=29, chars=string.ascii_letters + string.digits):
+    def _generate_ticket(self, length=ticket.max_length, chars=string.ascii_letters + string.digits):
         """ Generates a random string of the requested length. Used for creation of tickets. """
-        return u"%s-%s" % (self.prefix, ''.join(Random().sample(chars, length)))
+        return u"%s-%s" % (self.prefix, ''.join(Random().sample(chars, length - (len(self.prefix) + 1))))
 
 
 class ServiceTicket(BaseTicket):
