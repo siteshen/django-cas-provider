@@ -101,17 +101,12 @@ def logout(request, template_name='cas/logout.html',
 
 def proxy(request):
     targetService = request.GET['targetService']
-    pgtiou = request.GET['pgt']
+    pgt_id = request.GET['pgt']
 
     try:
-        proxyGrantingTicket = ProxyGrantingTicket.objects.get(pgtiou=pgtiou)
+        proxyGrantingTicket = ProxyGrantingTicket.objects.get(ticket=pgt_id)
     except ProxyGrantingTicket.DoesNotExist:
         return _cas2_error_response(INVALID_TICKET)
-
-    if not proxyGrantingTicket.targetService == targetService:
-        return _cas2_error_response(INVALID_SERVICE,
-            "The PGT was issued for %(original)s but the PT was requested for %(but)s" % dict(
-                original=proxyGrantingTicket.targetService, but=targetService))
 
     pt = ProxyTicket.objects.create(proxyGrantingTicket=proxyGrantingTicket,
         user=proxyGrantingTicket.serviceTicket.user,
