@@ -135,7 +135,10 @@ def ticket_validate(service, ticket_string, pgtUrl):
     except ServiceTicket.DoesNotExist:
         return _cas2_error_response(INVALID_TICKET)
 
-    if ticket.service != service:
+    ticketUrl =  urlparse.urlparse(ticket.service)
+    serviceUrl =  urlparse.urlparse(service)
+
+    if not(ticketUrl.hostname == serviceUrl.hostname and ticketUrl.path == serviceUrl.path and ticketUrl.port == serviceUrl.port):
         return _cas2_error_response(INVALID_SERVICE)
 
     pgtIouId = None
@@ -196,7 +199,7 @@ def generate_proxy_granting_ticket(pgt_url, ticket):
     query = dict(urlparse.parse_qsl(uri[4]))
     query.update(params)
 
-    uri[4] = urlencode(query)
+    uri[3] = urlencode(query)
 
     try:
         response = urllib2.urlopen(urlparse.urlunsplit(uri))

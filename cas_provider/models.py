@@ -12,7 +12,7 @@ else:
     # Python <2.6 compatibility
     from cgi import parse_qs
 
-__all__ = ['ServiceTicket', 'LoginTicket']
+__all__ = ['ServiceTicket', 'LoginTicket', 'ProxyGrantingTicket', 'ProxyTicket', 'ProxyGrantingTicketIOU']
 
 class BaseTicket(models.Model):
     ticket = models.CharField(_('ticket'), max_length=32)

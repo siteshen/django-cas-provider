@@ -2,23 +2,31 @@ import StringIO
 import urllib2
 from xml import etree
 from xml.etree import ElementTree
+import cas_provider
 from cas_provider.attribute_formatters import CAS, NSMAP
 from cas_provider.models import ServiceTicket
-from cas_provider.views import _cas2_sucess_response, INVALID_TICKET, _cas2_error_response
-from django.contrib.auth.models import User
+from cas_provider.views import _cas2_sucess_response, INVALID_TICKET, _cas2_error_response, generate_proxy_granting_ticket
+from django.contrib.auth.models import User, UserManager
 from django.core.urlresolvers import reverse
 from django.test import TestCase
-from urlparse import urlparse
+from urlparse import urlparse, parse_qsl, parse_qs
 from django.conf import settings
-import cas_provider
+
+
+
+
+dummy_urlopen_url = None
+
 
 def dummy_urlopen(url):
+    cas_provider.tests.dummy_urlopen_url = url
     pass
-
 
 class ViewsTest(TestCase):
 
     fixtures = ['cas_users', ]
+
+
 
     def setUp(self):
         self.service = 'http://example.com/'
@@ -255,6 +263,23 @@ class ViewsTest(TestCase):
         for user, pwd in (('root', '321'), ('notroot', '123'), ('nonactive', '123')):
             response = self._login_user(user, pwd)
             self._validate_cas2(response, False)
+
+
+    def test_generate_proxy_granting_ticket(self):
+        urllib2.urlopen = dummy_urlopen # monkey patching urllib2.urlopen so that the testcase doesnt really opens a url
+        url = 'http://my.call.back/callhere'
+
+        user = User.objects.get(username = 'root')
+        st = ServiceTicket.objects.create(user = user )
+        pgt = generate_proxy_granting_ticket(url, st)
+        self.assertIsNotNone(pgt)
+
+        calledUrl = cas_provider.tests.dummy_urlopen_url
+        parsedUrl = urlparse(calledUrl)
+        params = parse_qs(parsedUrl.query)
+        self.assertIsNotNone(params['pgtId'])
+        self.assertIsNotNone(params['pgtIou'])
+
 
 
     def _fail_login(self, username, password):
