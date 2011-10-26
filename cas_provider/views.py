@@ -1,3 +1,4 @@
+import logging
 from lxml import etree
 from urllib import urlencode
 import urllib2
@@ -28,6 +29,8 @@ ERROR_MESSAGES = (
     (INTERNAL_ERROR, u'An internal error occurred during ticket validation'),
     )
 
+
+logger = logging.getLogger(__name__)
 
 def login(request, template_name='cas/login.html',\
           success_redirect=settings.LOGIN_REDIRECT_URL,
@@ -200,8 +203,10 @@ def generate_proxy_granting_ticket(pgt_url, ticket):
         response = urllib2.urlopen(urlparse.urlunsplit(uri))
     except urllib2.HTTPError, e:
         if not e.code in proxy_callback_good_status:
+            logger.debug('Checking Proxy Callback URL {} returned {}. Not issuing PGT.'.format(uri, e.code))
             return
     except urllib2.URLError, e:
+        logger.debug('Checking Proxy Callback URL {} raised URLError. Not issuing PGT.'.format(uri))
         return
 
     pgt.save()
