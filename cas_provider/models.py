@@ -36,7 +36,7 @@ class BaseTicket(models.Model):
 
 class ServiceTicket(BaseTicket):
     user = models.ForeignKey(User, verbose_name=_('user'))
-    service = models.URLField(_('service'), verify_exists=False)
+    service = models.URLField(_('service'))
 
     prefix = 'ST'
 
